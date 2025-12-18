@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaino’s Spiderweb</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        /* --- CSS VARIABLES & THEME --- */
+        :root {
+            --pixel-bg: #87CEEB; /* Sky Blue */
+            --pixel-grass: #4caf50;
+            --pixel-sun: #fbc02d;
+            --pixel-white: #ffffff;
+            --pixel-black: #212121;
+            --pixel-border: 4px solid #000;
+            --accent-color: #ff4081;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Press Start 2P', cursive;
+            image-rendering: pixelated;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--pixel-bg);
+            background-image: 
+                radial-gradient(circle at 20% 20%, #fff 2%, transparent 3%),
+                radial-gradient(circle at 80% 10%, #fff 4%, transparent 5%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* --- REUSABLE PIXEL UI --- */
+        .pixel-card {
+            background: white;
+            border: var(--pixel-border);
+            box-shadow: 8px 8px 0px rgba(0,0,0,0.2);
+            padding: 20px;
+            text-align: center;
+            max-width: 90%;
+            width: 500px;
+            margin: 20px;
+        }
+
+        .btn {
+            background: #fff;
+            border: var(--pixel-border);
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 12px;
+            display: inline-block;
+            margin: 10px;
+            transition: transform 0.1s;
+            box-shadow: 4px 4px 0px #000;
+        }
+
+        .btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000;
+        }
+
+        .btn-truth { background-color: #4db6ac; color: white; }
+        .btn-dare { background-color: #e57373; color: white; }
+        .btn-nav { background-color: #ffb74d; }
+
+        /* --- LAYOUT SECTIONS --- */
+        .screen {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 50px;
+            animation: fadeIn 0.3s steps(5);
+        }
+
+        .active { display: flex; }
+
+        h1 {
+            color: white;
+            text-shadow: 4px 4px 0px #000;
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        /* --- HOME SCREEN --- */
+        .game-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        /* --- SPIN WHEEL ANIMATION --- */
+        .wheel-container {
+            margin: 20px;
+            display: none;
+        }
+
+        .spinning {
+            animation: rotate 1s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* --- LYRIC GAME --- */
+        #timer {
+            font-size: 24px;
+            color: #d32f2f;
+            margin: 10px;
+        }
+
+        .myanmar-text {
+            font-family: sans-serif; /* Myanmar text looks better in system font for readability */
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        /* --- FOOTER GRASS --- */
+        .grass {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 40px;
+            background: var(--pixel-grass);
+            border-top: var(--pixel-border);
+            z-index: -1;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="grass"></div>
+
+    <section id="home-screen" class="screen active">
+        <h1>LET’S PLAY</h1>
+        <div class="game-grid">
+            <div class="pixel-card">
+                <h3>Truth or Dare</h3>
+                <p>Spin the wheel and face the challenge!</p>
+                <button class="btn btn-nav" onclick="showScreen('tod-screen')">PLAY</button>
+            </div>
+            <div class="pixel-card">
+                <h3>Song Lyrics</h3>
+                <p>Guess the song title in 15 seconds!</p>
+                <button class="btn btn-nav" onclick="showScreen('lyrics-screen')">PLAY</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="tod-screen" class="screen">
+        <button class="btn" onclick="showScreen('home-screen')">⬅ BACK</button>
+        <div class="pixel-card">
+            <h2>TRUTH OR DARE</h2>
+            
+            <div id="spin-section">
+                <button class="btn" onclick="spinWheel()" id="spin-btn">🎡 SPIN FOR CODE</button>
+                <div id="wheel-graphic" class="wheel-container">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2353/2353713.png" width="80" alt="wheel">
+                </div>
+                <h3 id="result-code" style="color: var(--accent-color);"></h3>
+            </div>
+
+            <hr style="border: 2px dashed #000; margin: 20px 0;">
+
+            <div class="mode-selection">
+                <button class="btn btn-truth" onclick="getTruth()">TRUTH</button>
+                <button class="btn btn-dare" onclick="getDare()">DARE</button>
+            </div>
+
+            <div id="question-display" class="myanmar-text">Select a mode!</div>
+        </div>
+    </section>
+
+    <section id="lyrics-screen" class="screen">
+        <button class="btn" onclick="showScreen('home-screen')">⬅ BACK</button>
+        <div class="pixel-card">
+            <h2>LYRICS GAME</h2>
+            <div id="timer">15</div>
+            <div id="lyric-text" class="myanmar-text">---</div>
+            <div id="answer-text" style="color: #388e3c; margin: 10px; display: none; font-weight: bold;"></div>
+            <button class="btn btn-nav" id="next-lyric-btn" onclick="startLyricsGame()">NEXT LYRIC</button>
+        </div>
+    </section>
+
+    <script>
+        /* --- GAME DATA --- */
+        const truthQuestions = [
+            "အများမသိသေးတဲ့ ကိုယ်ရဲ့ တိတ်တဆိတ်nickname ၃ခု။",
+            "အလွဲလွဲ အချော်ချော်ဖြစ်ခဲ့တဲ့ စာမေးပွဲခန်းတွင်းဖြစ်ရပ်",
+            "ကိုယ်ကိုယ်တိုင်ရဲ့ အရွှံဆုံး အကျင့်ကဘာလဲ။",
+            "ဆရာ၊ဆရာမ မသိအောင်ခိုးလုပ်ခဲ့တဲ့ အရာ၃ ခု။",
+            "နောက်ဆုံးလိမ်ပြောခဲ့သောစကားကဘာလဲ။",
+            "ကိုယ်ရဲ့ celebriy crush ကဘယ်သူလဲ။",
+            "ဘယ်သူကို အမြဲစွဲစွဲမြဲမြဲစိတ်ထဲထည့်ထားသလဲ?",
+            "ကိုယ့်ရဲ့ အချစ်ဆုံးသူက ဘယ်သူလဲ။",
+            "ဒီနေ့ အမှန်တကယ် မပြောချင်တဲ့ စကားတစ်ခုက ဘာလဲ?",
+            "အတန်းကသူငယ်ချင်းတစ်ယောက်နဲ့ အမြဲရယ်နေရတဲ့ အဖြစ်အပျက်ကို ပြောပါ။",
+            "တီချယ်ရတီရဲ့ အရမ်း cute or funny habit ကဘာလဲ?",
+            "ကိုယ့်ဖုန်း galleryထဲမှာ delete မလုပ်ဖြစ်တဲ့ ဓာတ်ပုံက ဘာလဲ?",
+            "ဆရာမ/ဆရာတစ်ယောက်က ပြောတဲ့ စာကြောင်းတွေထဲမှာ အမှတ်တမဲ့ သေချာမှတ်မိနေတတ်တဲ့စကားက ဘာလဲ?",
+            "ကိုယ့် classmate တစ်ယောက်နဲ့ အံ့သြဖွယ် coincidence တစ်ခုရှိဖူးသလား?",
+            "ကိုယ်ရဲ့အရမ်းချစ်တဲ့အရာကို ဖော်ပြပါ။"
+        ];
+
+        const dareQuestions = [
+            "ငရုတ်သီးစားပြီး ရေမသောက်ဘဲ 30စက္ကန့်နေပါ",
+            "ကိုယ့်ဖုန်းနံပါတ်ထဲမှာရှိထဲ လူတစ်ယောက်ကို ဖုန်းခေါ်ပြီး သီချင်းဆိုပြပါ",
+            "သံပုရာသီးစားပြပါ",
+            "သီချင်းသံမပါဘဲ စက္ကန့်30 ကပြပါ",
+            "ကြက်သွန်ဖြူ စားပြပါ",
+            "Gallery ထဲမှာ နောက်ဆုံး saveခဲ့တဲ့ပုံကို postတင်ပါ",
+            "တံတောင်ဆစ်ကို လျှာနဲ့လျက်ပြပါ"
+        ];
+
+        const lyricsData = [
+            { q: "ပုံပြင်လေးလို ဒဏ္ဍာရီတစ်ခုလို ရင်ခုန်ခြင်းများ ရှင်သန်ခြင်းအစ", a: "accident" },
+            { q: "ကိုယ်ဟာအနာဂတ်မဲ့သူပါ အတောင်တွေကြွေနေတဲ့ ငှက်ပမာ", a: "ချန်ခဲ့" },
+            { q: "ငါ့မှာ မင်းအသံလေးကိုကြားရင် ရူးခါနေဆဲ …", a: "မခူးရက်ခဲ့ပါ" },
+            { q: "ကိုယ်မြတ်နိုးဖူးသူရဲ့ လက်နဲ့ကိုယ်တိုင်ရေးလို့ထားရှာတယ်", a: "စာ" },
+            { q: "လရောင်ထဲ ကိုယ်လမ်းလျှောက်ချင်တယ် …", a: "ဆွေးတယ်" },
+            { q: "လေပြေညှင်းရယ် ငြိမ်သက်ဆဲ ညမှာ …", a: "ပန်းချစ်သူ" },
+            { q: "သိပ်ချစ်တဲ့အကြောင်းလေး ကြားချင်တယ် …", a: "တိုးတိုးလေးပြောပါ" },
+            { q: "အတိတ်တွေက မှုန်ဝါးပေမဲ့ …", a: "စာမျက်နှာ၁၅" },
+            { q: "ရေထဲနစ်သူမှာ ဆက်ပြီးအသက်ရှင်စရာ …", a: "မင်းမှမင်း" },
+            { q: "တိမ်ပြာတွေပြေးတဲ့အခါ …", a: "စကားမပြောချင်" }
+        ];
+
+        /* --- NAVIGATION --- */
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            clearInterval(lyricTimerInterval); // Reset timer if leaving
+        }
+
+        /* --- TRUTH OR DARE LOGIC --- */
+        function spinWheel() {
+            const wheel = document.getElementById('wheel-graphic');
+            const result = document.getElementById('result-code');
+            const btn = document.getElementById('spin-btn');
+            
+            btn.disabled = true;
+            wheel.style.display = "block";
+            wheel.classList.add('spinning');
+            result.innerText = "Spinning...";
+
+            setTimeout(() => {
+                wheel.classList.remove('spinning');
+                const isG8N = Math.random() > 0.5;
+                let code = "";
+                if(isG8N) {
+                    const num = Math.floor(Math.random() * 20) + 1;
+                    code = `FYE-G8N-25${num.toString().padStart(3, '0')}`;
+                } else {
+                    const num = Math.floor(Math.random() * 46) + 1;
+                    code = `FYE-G8D-25${num.toString().padStart(3, '0')}`;
+                }
+                result.innerText = "CODE: " + code;
+                btn.disabled = false;
+            }, 1500);
+        }
+
+        function getTruth() {
+            const q = truthQuestions[Math.floor(Math.random() * truthQuestions.length)];
+            document.getElementById('question-display').innerText = "TRUTH: " + q;
+        }
+
+        function getDare() {
+            const q = dareQuestions[Math.floor(Math.random() * dareQuestions.length)];
+            document.getElementById('question-display').innerText = "DARE: " + q;
+        }
+
+        /* --- LYRICS GAME LOGIC --- */
+        let lyricTimerInterval;
+        let currentLyricIndex = 0;
+
+        function startLyricsGame() {
+            const timerEl = document.getElementById('timer');
+            const lyricEl = document.getElementById('lyric-text');
+            const answerEl = document.getElementById('answer-text');
+            const nextBtn = document.getElementById('next-lyric-btn');
+
+            // Reset UI
+            clearInterval(lyricTimerInterval);
+            answerEl.style.display = "none";
+            nextBtn.disabled = true;
+
+            // Pick random lyric
+            const item = lyricsData[Math.floor(Math.random() * lyricsData.length)];
+            lyricEl.innerText = item.q;
+            answerEl.innerText = "Answer: " + item.a;
+
+            let timeLeft = 15;
+            timerEl.innerText = timeLeft;
+
+            lyricTimerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(lyricTimerInterval);
+                    answerEl.style.display = "block";
+                    nextBtn.disabled = false;
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
